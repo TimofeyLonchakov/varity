@@ -131,8 +131,6 @@ bool LruCache::getFromCache(const std::string& key,
                             std::string& value,
                             bool& processed) const
 {
-    mutexCache.lock();
-
     std::map<std::string, int>::const_iterator citIndex =
             cacheIndexes.find(key);
     const bool found = (cacheIndexes.cend() != citIndex);
@@ -142,8 +140,6 @@ bool LruCache::getFromCache(const std::string& key,
         value = cache[citIndex->second].second.second;
     }
 
-    mutexCache.unlock();
-
     return found;
 }
 
@@ -151,8 +147,6 @@ void LruCache::putIntoCache(const std::string& key,
                             const std::string& value,
                             bool processed)
 {
-    mutexCache.lock();
-
     if(cache.size() < cacheMaxSize)
     {
         cacheIndexes.insert(std::make_pair(key, cache.size()));
@@ -169,6 +163,4 @@ void LruCache::putIntoCache(const std::string& key,
             cacheIndex = 0;
         }
     }
-
-    mutexCache.unlock();
 }

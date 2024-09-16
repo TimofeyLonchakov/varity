@@ -46,7 +46,6 @@ private:
     std::map<std::string, std::set<uint64_t>>   srcDataIds;
 
 private:
-    mutable std::mutex                                                  mutexCache;
     std::map<std::string, int>                                          cacheIndexes;
     std::vector<std::pair<std::string, std::pair<bool, std::string>>>   cache;
     int                                                                 cacheIndex;
