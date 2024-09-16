@@ -116,6 +116,8 @@ public:
     }
     void onReply(uint64_t id)
     {
+        request.addProcessedId(id);
+
         mtxOutput.lock();
 
         std::cout << "ID=" << id << ": processing failed.\n";

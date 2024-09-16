@@ -40,6 +40,8 @@ uint64_t LruCache::onRequest(const std::string& key)
     std::string value;
     bool processed = false;
 
+    mutexSrcData.lock();
+
     if(getFromCache(key, value, processed))
     {
         if(processed)
@@ -53,7 +55,6 @@ uint64_t LruCache::onRequest(const std::string& key)
     }
     else
     {
-        mutexSrcData.lock();
         std::map<std::string, std::set<uint64_t>>::iterator itSrc =
                 srcDataIds.find(key);
         if(srcDataIds.end() == itSrc)
@@ -65,8 +66,9 @@ uint64_t LruCache::onRequest(const std::string& key)
         {
             itSrc->second.insert(id);
         }
-        mutexSrcData.unlock();
     }
+
+    mutexSrcData.unlock();
 
     return id;
 }
@@ -90,6 +92,15 @@ bool LruCache::onProcessNext()
     key.swap(*srcDataKeys.begin());
     srcDataKeys.pop_front();
 
+    mutexSrcData.unlock();
+
+    std::string value;
+    const bool processed = irequest->onRequest(key, value);
+
+    mutexSrcData.lock();
+
+    putIntoCache(key, value, processed);
+
     std::map<std::string, std::set<uint64_t>>::iterator itSrcIds =
             srcDataIds.find(key);
     std::set<uint64_t> ids;
@@ -97,10 +108,6 @@ bool LruCache::onProcessNext()
     srcDataIds.erase(itSrcIds);
 
     mutexSrcData.unlock();
-
-    std::string value;
-    const bool processed = irequest->onRequest(key, value);
-    putIntoCache(key, value, processed);
 
     for(std::set<uint64_t>::const_iterator citId = ids.cbegin() ;
         ids.cend() != citId ; ++citId)
