@@ -44,6 +44,8 @@ uint64_t LruCache::onRequest(const std::string& key)
 
     if(getFromCache(key, value, processed))
     {
+        mutexSrcData.unlock();
+
         if(processed)
         {
             ireply->onReply(id, value);
@@ -52,20 +54,20 @@ uint64_t LruCache::onRequest(const std::string& key)
         {
             ireply->onReply(id);
         }
+
+        return id;
+    }
+
+    std::map<std::string, std::set<uint64_t>>::iterator itSrc =
+            srcDataIds.find(key);
+    if(srcDataIds.end() == itSrc)
+    {
+        srcDataKeys.insert(srcDataKeys.end(), key);
+        srcDataIds.insert(std::make_pair(key, std::set<uint64_t>{id}));
     }
     else
     {
-        std::map<std::string, std::set<uint64_t>>::iterator itSrc =
-                srcDataIds.find(key);
-        if(srcDataIds.end() == itSrc)
-        {
-            srcDataKeys.insert(srcDataKeys.end(), key);
-            srcDataIds.insert(std::make_pair(key, std::set<uint64_t>{id}));
-        }
-        else
-        {
-            itSrc->second.insert(id);
-        }
+        itSrc->second.insert(id);
     }
 
     mutexSrcData.unlock();
